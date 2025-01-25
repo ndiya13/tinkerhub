@@ -38,3 +38,21 @@ class Disaster(db.Model):
     severity = db.Column(db.String(50))
     description = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+@app.route('/')
+def home():
+    disasters = Disaster.query.order_by(Disaster.created_at.desc()).limit(10).all()
+    return render_template('home.html', disasters=disasters)
+
+@app.route('/update_disasters')
+def update_disasters():
+    # GDACS API endpoint
+    gdacs_url = "https://www.gdacs.org/feed.aspx?format=json"
+    try:
+        response = requests.get(gdacs_url)
+        data = response.json()
+        # Process and store disaster data
+        # You'll need to implement the actual data processing based on GDACS API response
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
