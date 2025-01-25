@@ -97,3 +97,39 @@ def login():
 def logout():
     logout_user()
     return jsonify({"message": "Logged out successfully"})
+
+@app.route('/request_resource', methods=['POST'])
+@login_required
+def request_resource():
+    data = request.form
+    new_request = ResourceRequest(
+        user_id=current_user.id,
+        resource_type=data['resource_type'],
+        description=data['description'],
+        location=data['location']
+    )
+    db.session.add(new_request)
+    db.session.commit()
+    return jsonify({"message": "Resource request created successfully"})
+
+@app.route('/view_requests')
+@login_required
+def view_requests():
+    if current_user.is_volunteer:
+        requests = ResourceRequest.query.order_by(ResourceRequest.created_at.desc()).all()
+    else:
+        requests = ResourceRequest.query.filter_by(user_id=current_user.id).all()
+    return render_template('requests.html', requests=requests)
+
+@app.route('/update_request_status/<int:request_id>', methods=['POST'])
+@login_required
+def update_request_status(request_id):
+    if not current_user.is_volunteer:
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    request = ResourceRequest.query.get_or_404(request_id)
+    request.status = request.form['status']
+    db.session.commit()
+    return jsonify({"message": "Status updated successfully"})
+
+    
