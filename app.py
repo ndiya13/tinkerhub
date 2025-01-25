@@ -132,4 +132,81 @@ def update_request_status(request_id):
     db.session.commit()
     return jsonify({"message": "Status updated successfully"})
 
+@app.route('/profile')
+@login_required
+def profile():
+    user_requests = ResourceRequest.query.filter_by(user_id=current_user.id).order_by(ResourceRequest.created_at.desc()).all()
+    return render_template('profile.html', user=current_user, requests=user_requests)
+
+@app.route('/update_profile', methods=['POST'])
+@login_required
+def update_profile():
+    data = request.form
+    user = current_user
+    user.skills = data.get('skills', user.skills)
+    user.experience = data.get('experience', user.experience)
+    user.location = data.get('location', user.location)
+    db.session.commit()
+    return jsonify({"message": "Profile updated successfully"})
+
+@app.route('/volunteer_signup', methods=['GET', 'POST'])
+def volunteer_signup():
+    if request.method == 'POST':
+        if not current_user.is_authenticated:
+            return jsonify({"error": "Please login first"}), 401
+        
+        data = request.form
+        current_user.is_volunteer = True
+        current_user.skills = data.get('skills', '')
+        current_user.experience = data.get('experience', '')
+        current_user.location = data.get('location', '')
+        
+        try:
+            db.session.commit()
+            return jsonify({"message": "Volunteer registration successful"})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": str(e)}), 500
+            
+    return render_template('volunteer_signup.html')
+
+@app.route('/update_volunteer_profile', methods=['POST'])
+@login_required
+def update_volunteer_profile():
+    if not current_user.is_volunteer:
+        return jsonify({"error": "Unauthorized"}), 403
+        
+    data = request.form
+    current_user.skills = data.get('skills', current_user.skills)
+    current_user.experience = data.get('experience', current_user.experience)
+    current_user.location = data.get('location', current_user.location)
     
+    try:
+        db.session.commit()
+        return jsonify({"message": "Volunteer profile updated successfully"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+def process_gdacs_data(data):
+    for alert in data['alerts']:
+        existing_disaster = Disaster.query.filter_by(gdacs_id=alert['id']).first()
+        if not existing_disaster:
+            new_disaster = Disaster(
+                gdacs_id=alert['id'],
+                disaster_type=alert['type'],
+                location=f"{alert['latitude']}, {alert['longitude']}",
+                severity=alert['severity'],
+                description=alert['description']
+            )
+            db.session.add(new_disaster)
+    db.session.commit()
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True)
