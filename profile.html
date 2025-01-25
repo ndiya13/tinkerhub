@@ -1,95 +1,95 @@
 {% extends "base.html" %}
 
+{% block title %}Profile - {{ user.username }}{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <h2>Profile</h2>
-    <div class="row">
-        <div class="col-md-6">
-            <form id="profile-form" method="POST">
-                <div class="mb-3">
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" value="{{ user.username }}" disabled>
+<div class="container">
+    <div class="profile-container">
+        <div class="profile-sidebar">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <img src="{{ url_for('static', filename='images/default-avatar.png') }}" alt="Profile Picture">
                 </div>
-                
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" value="{{ user.email }}" disabled>
-                </div>
+                <h1>{{ user.username }}</h1>
+                <p class="profile-status {% if user.is_volunteer %}volunteer{% endif %}">
+                    {% if user.is_volunteer %}
+                        <i class="fas fa-star"></i> Volunteer
+                    {% else %}
+                        <i class="fas fa-user"></i> Member
+                    {% endif %}
+                </p>
+            </div>
 
-                <div class="mb-3">
-                    <label for="location" class="form-label">Location</label>
-                    <input type="text" class="form-control" id="location" name="location" value="{{ user.location or '' }}">
+            <div class="profile-info">
+                <div class="info-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>{{ user.email }}</span>
                 </div>
-
-                {% if user.is_volunteer %}
-                <div class="mb-3">
-                    <label for="skills" class="form-label">Skills</label>
-                    <textarea class="form-control" id="skills" name="skills" rows="3">{{ user.skills or '' }}</textarea>
+                <div class="info-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>{{ user.location or 'Location not set' }}</span>
                 </div>
+            </div>
 
-                <div class="mb-3">
-                    <label for="experience" class="form-label">Experience</label>
-                    <textarea class="form-control" id="experience" name="experience" rows="3">{{ user.experience or '' }}</textarea>
-                </div>
-                {% endif %}
-
-                <h4 class="mt-4">Change Password</h4>
-                <div class="mb-3">
-                    <label for="current_password" class="form-label">Current Password</label>
-                    <input type="password" class="form-control" id="current_password" name="current_password">
-                </div>
-
-                <div class="mb-3">
-                    <label for="new_password" class="form-label">New Password</label>
-                    <input type="password" class="form-control" id="new_password" name="new_password">
-                </div>
-
-                <button type="submit" class="btn btn-primary">Update Profile</button>
-            </form>
+            <div class="profile-actions">
+                <button class="btn btn-primary" onclick="toggleEditMode()">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </button>
+            </div>
         </div>
 
-        <div class="col-md-6">
-            <h3>My Resource Requests</h3>
-            {% if requests %}
-                {% for request in requests %}
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ request.resource_type }}</h5>
-                        <p class="card-text">{{ request.description }}</p>
-                        <p class="card-text"><small class="text-muted">Status: {{ request.status }}</small></p>
-                        <p class="card-text"><small class="text-muted">Created: {{ request.created_at.strftime('%Y-%m-%d %H:%M') }}</small></p>
-                    </div>
+        <div class="profile-main">
+            <div class="profile-section">
+                <h2><i class="fas fa-tools"></i> Skills</h2>
+                <div class="skills-container">
+                    {% if user.skills %}
+                        {% for skill in user.skills.split(',') %}
+                            <span class="skill-tag">{{ skill.strip() }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <p class="no-content">No skills listed yet</p>
+                    {% endif %}
                 </div>
-                {% endfor %}
-            {% else %}
-                <p>No resource requests yet.</p>
-            {% endif %}
+            </div>
+
+            <div class="profile-section">
+                <h2><i class="fas fa-history"></i> Experience</h2>
+                <div class="experience-content">
+                    {{ user.experience or 'No experience listed yet' }}
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h2><i class="fas fa-clipboard-list"></i> Request History</h2>
+                <div class="requests-container">
+                    {% if requests %}
+                        {% for request in requests %}
+                            <div class="request-card">
+                                <div class="request-header">
+                                    <h3>{{ request.resource_type }}</h3>
+                                    <span class="status-badge status-{{ request.status }}">
+                                        {{ request.status }}
+                                    </span>
+                                </div>
+                                <p class="request-description">{{ request.description }}</p>
+                                <div class="request-footer">
+                                    <span class="request-date">
+                                        <i class="fas fa-calendar"></i>
+                                        {{ request.created_at.strftime('%B %d, %Y') }}
+                                    </span>
+                                    <span class="request-location">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        {{ request.location }}
+                                    </span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="no-content">No requests made yet</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
-<script>
-    document.getElementById('profile-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        
-        fetch('/profile', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alert(data.error);
-            } else {
-                alert(data.message);
-                location.reload();
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while updating the profile');
-        });
-    });
-    </script>
-    {% endblock %}
+{% endblock %}
