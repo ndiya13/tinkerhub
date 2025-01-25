@@ -1,95 +1,139 @@
 {% extends "base.html" %}
 
-{% block title %}Profile - {{ user.username }}{% endblock %}
-
 {% block content %}
-<div class="container">
-    <div class="profile-container">
-        <div class="profile-sidebar">
-            <div class="profile-header">
-                <div class="profile-avatar">
-                    <img src="{{ url_for('static', filename='images/default-avatar.png') }}" alt="Profile Picture">
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">My Profile</h2>
                 </div>
-                <h1>{{ user.username }}</h1>
-                <p class="profile-status {% if user.is_volunteer %}volunteer{% endif %}">
-                    {% if user.is_volunteer %}
-                        <i class="fas fa-star"></i> Volunteer
-                    {% else %}
-                        <i class="fas fa-user"></i> Member
-                    {% endif %}
-                </p>
-            </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <!-- Profile Form Column -->
+                        <div class="col-md-6">
+                            <form id="profile-form" method="POST" class="needs-validation" novalidate>
+                                <div class="card shadow-sm mb-4">
+                                    <div class="card-header bg-light">
+                                        <h4 class="mb-0">Personal Information</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="username" class="form-label fw-bold">Username</label>
+                                            <input type="text" class="form-control bg-light" id="username" value="{{ user.username }}" disabled>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="email" class="form-label fw-bold">Email</label>
+                                            <input type="email" class="form-control bg-light" id="email" value="{{ user.email }}" disabled>
+                                        </div>
 
-            <div class="profile-info">
-                <div class="info-item">
-                    <i class="fas fa-envelope"></i>
-                    <span>{{ user.email }}</span>
-                </div>
-                <div class="info-item">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span>{{ user.location or 'Location not set' }}</span>
-                </div>
-            </div>
+                                        <div class="mb-3">
+                                            <label for="location" class="form-label fw-bold">Location</label>
+                                            <input type="text" class="form-control" id="location" name="location" value="{{ user.location or '' }}" placeholder="Enter your location">
+                                        </div>
 
-            <div class="profile-actions">
-                <button class="btn btn-primary" onclick="toggleEditMode()">
-                    <i class="fas fa-edit"></i> Edit Profile
-                </button>
-            </div>
-        </div>
+                                        {% if user.is_volunteer %}
+                                        <div class="mb-3">
+                                            <label for="skills" class="form-label fw-bold">Skills</label>
+                                            <textarea class="form-control" id="skills" name="skills" rows="3" placeholder="List your relevant skills">{{ user.skills or '' }}</textarea>
+                                        </div>
 
-        <div class="profile-main">
-            <div class="profile-section">
-                <h2><i class="fas fa-tools"></i> Skills</h2>
-                <div class="skills-container">
-                    {% if user.skills %}
-                        {% for skill in user.skills.split(',') %}
-                            <span class="skill-tag">{{ skill.strip() }}</span>
-                        {% endfor %}
-                    {% else %}
-                        <p class="no-content">No skills listed yet</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="profile-section">
-                <h2><i class="fas fa-history"></i> Experience</h2>
-                <div class="experience-content">
-                    {{ user.experience or 'No experience listed yet' }}
-                </div>
-            </div>
-
-            <div class="profile-section">
-                <h2><i class="fas fa-clipboard-list"></i> Request History</h2>
-                <div class="requests-container">
-                    {% if requests %}
-                        {% for request in requests %}
-                            <div class="request-card">
-                                <div class="request-header">
-                                    <h3>{{ request.resource_type }}</h3>
-                                    <span class="status-badge status-{{ request.status }}">
-                                        {{ request.status }}
-                                    </span>
+                                        <div class="mb-3">
+                                            <label for="experience" class="form-label fw-bold">Experience</label>
+                                            <textarea class="form-control" id="experience" name="experience" rows="3" placeholder="Describe your experience">{{ user.experience or '' }}</textarea>
+                                        </div>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                                <p class="request-description">{{ request.description }}</p>
-                                <div class="request-footer">
-                                    <span class="request-date">
-                                        <i class="fas fa-calendar"></i>
-                                        {{ request.created_at.strftime('%B %d, %Y') }}
-                                    </span>
-                                    <span class="request-location">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                        {{ request.location }}
-                                    </span>
+
+                                <div class="card shadow-sm">
+                                    <div class="card-header bg-light">
+                                        <h4 class="mb-0">Change Password</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="current_password" class="form-label fw-bold">Current Password</label>
+                                            <input type="password" class="form-control" id="current_password" name="current_password">
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="new_password" class="form-label fw-bold">New Password</label>
+                                            <input type="password" class="form-control" id="new_password" name="new_password">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 d-grid">
+                                    <button type="submit" class="btn btn-primary btn-lg">Update Profile</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Resource Requests Column -->
+                        <div class="col-md-6">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h4 class="mb-0">My Resource Requests</h4>
+                                </div>
+                                <div class="card-body">
+                                    {% if requests %}
+                                        <div class="request-list">
+                                            {% for request in requests %}
+                                            <div class="card mb-3 border-0 shadow-sm">
+                                                <div class="card-body">
+                                                    <h5 class="card-title text-primary">{{ request.resource_type }}</h5>
+                                                    <p class="card-text">{{ request.description }}</p>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="badge bg-{{ 'success' if request.status == 'completed' else 'warning' }}">
+                                                            {{ request.status }}
+                                                        </span>
+                                                        <small class="text-muted">
+                                                            {{ request.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="text-center py-4">
+                                            <p class="text-muted mb-0">No resource requests yet.</p>
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
-                        {% endfor %}
-                    {% else %}
-                        <p class="no-content">No requests made yet</p>
-                    {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('profile-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('/profile', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            alert(data.message);
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating the profile');
+    });
+});
+</script>
 {% endblock %}
