@@ -10,6 +10,203 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* Login Page Specific Styles */
+        .login-container {
+            min-height: calc(100vh - 100px);
+            display: flex;
+            align-items: center;
+            padding: 2rem 0;
+        }
+
+        .login-card {
+            max-width: 400px;
+            width: 100%;
+            margin: auto;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .login-card .card-header {
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .login-card .card-header h3 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .login-card .card-body {
+            padding: 2rem;
+        }
+
+        .login-form .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .login-form .form-control {
+            background-color: #f8f9fa;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem 1rem;
+        }
+
+        .login-form .form-control:focus {
+            background-color: #fff;
+        }
+
+        .password-toggle {
+            position: relative;
+        }
+
+        .password-toggle .toggle-password {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6c757d;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .password-toggle .toggle-password:hover {
+            color: #0d6efd;
+        }
+
+        .login-form .form-check {
+            margin: 1rem 0;
+        }
+
+        .login-form .btn-login {
+            width: 100%;
+            padding: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .login-divider {
+            text-align: center;
+            position: relative;
+            margin: 1.5rem 0;
+        }
+
+        .login-divider::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: #dee2e6;
+        }
+
+        .login-divider::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: #dee2e6;
+        }
+
+        .login-divider span {
+            background: #fff;
+            padding: 0 1rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .social-login {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .social-login .btn {
+            flex: 1;
+            padding: 0.75rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #6c757d;
+        }
+
+        .register-link a {
+            color: #0d6efd;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Error Message Styling */
+        .login-error {
+            background-color: #fff3f3;
+            color: #dc3545;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Loading State */
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 1rem;
+            height: 1rem;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-right-color: transparent;
+            animation: rotate 0.75s linear infinite;
+        }
+
+        @keyframes rotate {
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
    
