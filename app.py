@@ -126,30 +126,40 @@ def admin_dashboard():
 
 @app.route('/admin/approve-volunteer/<int:id>', methods=['POST'])
 @login_required
-@admin_required
 def approve_volunteer(id):
+    if not current_user.is_admin:
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('admin_dashboard'))
+    
     try:
         application = VolunteerApplication.query.get_or_404(id)
         application.status = 'approved'
         application.user.is_volunteer = True
         db.session.commit()
-        return jsonify({'success': True, 'message': 'Volunteer approved successfully'})
+        flash('Volunteer application approved successfully!', 'success')
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)}), 500
+        flash(f'Error approving application: {str(e)}', 'error')
+    
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/reject-volunteer/<int:id>', methods=['POST'])
 @login_required
-@admin_required
 def reject_volunteer(id):
+    if not current_user.is_admin:
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('admin_dashboard'))
+    
     try:
         application = VolunteerApplication.query.get_or_404(id)
         application.status = 'rejected'
         db.session.commit()
-        return jsonify({'success': True, 'message': 'Volunteer rejected successfully'})
+        flash('Volunteer application rejected successfully!', 'success')
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)}), 500
+        flash(f'Error rejecting application: {str(e)}', 'error')
+    
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/edit-disaster/<int:id>', methods=['GET'])
 @login_required
