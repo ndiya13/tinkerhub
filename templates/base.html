@@ -209,6 +209,9 @@
             100% { transform: translate(-50%, -50%) rotate(360deg); }
         }
     </style>
+    {% if csrf_token() %}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    {% endif %}
 </head>
 <body>
    
@@ -242,9 +245,8 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="flash flash-{{ category }}">
-                        <i class="fas fa-info-circle"></i> {{ message }}
-                        <button class="flash-close"><i class="fas fa-times"></i></button>
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
                     </div>
                 {% endfor %}
             {% endif %}

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user
 import requests
@@ -135,18 +135,75 @@ def admin_dashboard():
                          disasters=disasters)
 
 @app.route('/admin/approve-volunteer/<int:id>', methods=['POST'])
-@admin_required
+@login_required
 def approve_volunteer(id):
-    application = VolunteerApplication.query.get_or_404(id)
-    application.status = 'approved'
-    application.user.is_volunteer = True
-    db.session.commit()
-    return jsonify({'success': True})
+    if not current_user.is_admin:
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('admin_dashboard'))
+    
+    try:
+        application = VolunteerApplication.query.get_or_404(id)
+        application.status = 'approved'
+        application.user.is_volunteer = True
+        db.session.commit()
+        flash('Volunteer application approved successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error approving application: {str(e)}', 'error')
+    
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/reject-volunteer/<int:id>', methods=['POST'])
-@admin_required
+@login_required
 def reject_volunteer(id):
-    application = VolunteerApplication.query.get_or_404(id)
-    application.status = 'rejected'
-    db.session.commit()
-    return jsonify({'success': True})
+    if not current_user.is_admin:
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('admin_dashboard'))
+    
+    try:
+        application = VolunteerApplication.query.get_or_404(id)
+        application.status = 'rejected'
+        db.session.commit()
+        flash('Volunteer application rejected successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error rejecting application: {str(e)}', 'error')
+    
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/edit-disaster/<int:id>', methods=['GET'])
+@login_required
+def edit_disaster(id):
+    if not current_user.is_admin:
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('admin_dashboard'))
+    
+    disaster = Disaster.query.get_or_404(id)
+    return render_template('edit_disaster.html', disaster=disaster)
+
+@app.route('/admin/delete-disaster/<int:id>', methods=['POST'])
+@login_required
+def delete_disaster(id):
+    if not current_user.is_admin:
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('admin_dashboard'))
+    
+    try:
+        disaster = Disaster.query.get_or_404(id)
+        db.session.delete(disaster)
+        db.session.commit()
+        flash('Disaster zone deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting disaster zone: {str(e)}', 'error')
+    
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/add-disaster')
+@login_required
+def add_disaster():
+    if not current_user.is_admin:
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('admin_dashboard'))
+        
+    return render_template('add_disaster.html')
