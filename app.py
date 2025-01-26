@@ -1,28 +1,38 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, current_user
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 import requests
 from datetime import datetime
 from functools import wraps
+from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'  # Change this to a secure secret key
+app.config['SECRET_KEY'] = 'your-secret-key-here'  # Change this!
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///disaster_relief.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize extensions
 db = SQLAlchemy(app)
-
-login_manager = LoginManager()
-login_manager.init_app(app)
+login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+csrf = CSRFProtect(app)
 
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(120), nullable=False)
-    is_volunteer = db.Column(db.Boolean, default=False)
-    skills = db.Column(db.String(500))
-    experience = db.Column(db.String(500))
-    location = db.Column(db.String(200))
+# Import models
+from models import User, VolunteerApplication, Disaster, DisasterResource
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin:
+            flash('Access denied.', 'error')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 class ResourceRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -41,14 +51,6 @@ class Disaster(db.Model):
     severity = db.Column(db.String(50))
     description = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_admin:
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @app.route('/')
 def home():
@@ -104,72 +106,52 @@ def login():
     return render_template('login.html')
 
 @app.route('/admin')
+@login_required
 @admin_required
 def admin_dashboard():
-    total_users = User.query.count()
-    total_volunteers = User.query.filter_by(is_volunteer=True).count()
-    pending_applications = VolunteerApplication.query.filter_by(status='pending').count()
-    active_disasters = Disaster.query.filter_by(status='active').count()
+    stats = {
+        'total_users': User.query.count(),
+        'total_volunteers': User.query.filter_by(is_volunteer=True).count(),
+        'pending_applications': VolunteerApplication.query.filter_by(status='pending').count(),
+        'active_disasters': Disaster.query.filter_by(status='active').count()
+    }
     
-    recent_activities = [
-        {
-            'icon': 'fas fa-user-plus',
-            'description': 'New user registered',
-            'timestamp': '2 minutes ago'
-        },
-        # Add more activities
-    ]
-    
-    users = User.query.all()
-    volunteer_applications = VolunteerApplication.query.filter_by(status='pending').all()
-    disasters = Disaster.query.all()
+    recent_activities = get_recent_activities()
+    pending_applications = VolunteerApplication.query.filter_by(status='pending').all()
+    active_disasters = Disaster.query.filter_by(status='active').all()
     
     return render_template('admin_dashboard.html',
-                         total_users=total_users,
-                         total_volunteers=total_volunteers,
-                         pending_applications=pending_applications,
-                         active_disasters=active_disasters,
+                         stats=stats,
                          recent_activities=recent_activities,
-                         users=users,
-                         volunteer_applications=volunteer_applications,
-                         disasters=disasters)
+                         pending_applications=pending_applications,
+                         active_disasters=active_disasters)
 
 @app.route('/admin/approve-volunteer/<int:id>', methods=['POST'])
 @login_required
+@admin_required
 def approve_volunteer(id):
-    if not current_user.is_admin:
-        flash('Unauthorized access', 'error')
-        return redirect(url_for('admin_dashboard'))
-    
     try:
         application = VolunteerApplication.query.get_or_404(id)
         application.status = 'approved'
         application.user.is_volunteer = True
         db.session.commit()
-        flash('Volunteer application approved successfully!', 'success')
+        return jsonify({'success': True, 'message': 'Volunteer approved successfully'})
     except Exception as e:
         db.session.rollback()
-        flash(f'Error approving application: {str(e)}', 'error')
-    
-    return redirect(url_for('admin_dashboard'))
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/admin/reject-volunteer/<int:id>', methods=['POST'])
 @login_required
+@admin_required
 def reject_volunteer(id):
-    if not current_user.is_admin:
-        flash('Unauthorized access', 'error')
-        return redirect(url_for('admin_dashboard'))
-    
     try:
         application = VolunteerApplication.query.get_or_404(id)
         application.status = 'rejected'
         db.session.commit()
-        flash('Volunteer application rejected successfully!', 'success')
+        return jsonify({'success': True, 'message': 'Volunteer rejected successfully'})
     except Exception as e:
         db.session.rollback()
-        flash(f'Error rejecting application: {str(e)}', 'error')
-    
-    return redirect(url_for('admin_dashboard'))
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/admin/edit-disaster/<int:id>', methods=['GET'])
 @login_required
@@ -207,3 +189,15 @@ def add_disaster():
         return redirect(url_for('admin_dashboard'))
         
     return render_template('add_disaster.html')
+
+# Helper functions
+def get_recent_activities(limit=5):
+    # Implement your activity logging logic here
+    return []
+
+# Create tables
+with app.app_context():
+    db.create_all()
+
+if __name__ == '__main__':
+    app.run(debug=True)
