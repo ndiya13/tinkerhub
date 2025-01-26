@@ -1,63 +1,237 @@
 {% extends "base.html" %}
 
-{% block title %}Home - Disaster Relief Platform{% endblock %}
-
 {% block content %}
-<div class="container">
-    <div class="home-header">
-        <h1>Welcome to Disaster Relief Platform</h1>
-        <p class="subtitle">Connecting volunteers with those in need during disasters</p>
-    </div>
-
-    <div class="recent-disasters">
-        <h2>Recent Disasters</h2>
-        {% if disasters %}
-            <div class="disasters-grid">
-                {% for disaster in disasters %}
-                    <div class="disaster-card">
-                        <div class="disaster-type">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            {{ disaster.disaster_type }}
-                        </div>
-                        <div class="disaster-info">
-                            <h3>{{ disaster.location }}</h3>
-                            <p>{{ disaster.description }}</p>
-                            <div class="disaster-meta">
-                                <span class="severity {{ disaster.severity.lower() }}">
-                                    {{ disaster.severity }}
-                                </span>
-                                <span class="date">
-                                    {{ disaster.created_at.strftime('%B %d, %Y') }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 hero-text fade-in">
+                <h1 class="display-4 fw-bold mb-4">Disaster Relief Platform</h1>
+                <p class="lead mb-4">Connecting communities and volunteers during times of crisis. Join us in making a difference when it matters most.</p>
+                
+                {% if current_user.is_authenticated %}
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('profile') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-user-circle me-2"></i>My Profile
+                    </a>
+                    {% if not current_user.is_volunteer %}
+                    <a href="{{ url_for('volunteer_signup') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-hands-helping me-2"></i>Become Volunteer
+                    </a>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                    <a href="{{ url_for('register') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Register
+                    </a>
+                </div>
+                {% endif %}
             </div>
-        {% else %}
-            <p class="no-disasters">No recent disasters reported.</p>
-        {% endif %}
-    </div>
-
-    <div class="action-buttons">
-        {% if current_user.is_authenticated %}
-            {% if current_user.is_volunteer %}
-                <a href="{{ url_for('view_requests') }}" class="btn btn-primary">
-                    <i class="fas fa-clipboard-list"></i> View Help Requests
-                </a>
-            {% else %}
-                <a href="{{ url_for('volunteer_signup') }}" class="btn btn-primary">
-                    <i class="fas fa-hand-holding-heart"></i> Become a Volunteer
-                </a>
-            {% endif %}
-        {% else %}
-            <a href="{{ url_for('register') }}" class="btn btn-primary">
-                <i class="fas fa-user-plus"></i> Register Now
-            </a>
-            <a href="{{ url_for('login') }}" class="btn btn-secondary">
-                <i class="fas fa-sign-in-alt"></i> Login
-            </a>
-        {% endif %}
+            <div class="col-lg-6 d-none d-lg-block">
+                <img src="{{ url_for('static', filename='images/hero-image.png') }}" alt="Disaster Relief" class="img-fluid hero-image">
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- Stats Section -->
+<div class="stats-section py-5">
+    <div class="container">
+        <div class="row g-4 text-center">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <i class="fas fa-users fa-2x text-primary mb-3"></i>
+                    <h3 class="fw-bold">1,000+</h3>
+                    <p class="text-muted">Active Volunteers</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <i class="fas fa-hands-helping fa-2x text-primary mb-3"></i>
+                    <h3 class="fw-bold">500+</h3>
+                    <p class="text-muted">Relief Operations</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <i class="fas fa-globe fa-2x text-primary mb-3"></i>
+                    <h3 class="fw-bold">50+</h3>
+                    <p class="text-muted">Locations Served</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Disasters Section -->
+<div class="disasters-section py-5 bg-light">
+    <div class="container">
+        <h2 class="section-title text-center mb-5">Recent Disasters</h2>
+        <div class="row g-4">
+            {% for disaster in disasters %}
+            <div class="col-md-6 col-lg-4">
+                <div class="disaster-card card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title text-primary mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                {{ disaster.disaster_type }}
+                            </h5>
+                            <span class="badge bg-{{ 'danger' if disaster.severity == 'high' else 'warning' if disaster.severity == 'medium' else 'info' }}">
+                                {{ disaster.severity }}
+                            </span>
+                        </div>
+                        <h6 class="card-subtitle mb-2 text-muted">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            {{ disaster.location }}
+                        </h6>
+                        <p class="card-text">{{ disaster.description }}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <small class="text-muted">
+                                <i class="far fa-clock me-1"></i>
+                                {{ disaster.created_at.strftime('%Y-%m-%d %H:%M') }}
+                            </small>
+                            <a href="#" class="btn btn-outline-primary btn-sm">Learn More</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Call to Action Section -->
+<div class="cta-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h2 class="mb-4">Ready to Make a Difference?</h2>
+                <p class="lead mb-4">Join our network of volunteers and help communities in need.</p>
+                <a href="{{ url_for('volunteer_signup') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-hands-helping me-2"></i>Become a Volunteer
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add these styles to your existing CSS in base.html -->
+<style>
+    /* Hero Section Styles */
+    .hero-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 6rem 0;
+        margin-bottom: 0;
+    }
+
+    .hero-text {
+        animation: slideInLeft 1s ease-out;
+    }
+
+    .hero-image {
+        animation: slideInRight 1s ease-out;
+        max-height: 400px;
+    }
+
+    /* Stats Section Styles */
+    .stat-card {
+        padding: 2rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    /* Disasters Section Styles */
+    .section-title {
+        position: relative;
+        padding-bottom: 1rem;
+        margin-bottom: 3rem;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 3px;
+        background: #0d6efd;
+    }
+
+    .disaster-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .disaster-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    /* CTA Section Styles */
+    .cta-section {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        color: white;
+    }
+
+    .cta-section .btn-primary {
+        background: white;
+        color: #0d6efd;
+        border: none;
+    }
+
+    .cta-section .btn-primary:hover {
+        background: #f8f9fa;
+        transform: translateY(-2px);
+    }
+
+    /* Animations */
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 991.98px) {
+        .hero-section {
+            padding: 4rem 0;
+        }
+
+        .hero-text {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .hero-text .d-flex {
+            justify-content: center;
+        }
+    }
+</style>
 {% endblock %}
