@@ -1,42 +1,63 @@
 {% extends "base.html" %}
 
+{% block title %}Home - Disaster Relief Platform{% endblock %}
+
 {% block content %}
 <div class="container">
-    <!-- Hero Section -->
-    <div class="row mb-5">
-        <div class="col-lg-8 mx-auto text-center">
-            <h1 class="display-4 mb-3">Welcome to Disaster Relief Platform</h1>
-            <p class="lead mb-4">Connect with volunteers and access resources during times of crisis</p>
-            
-            <!-- Add this new section for profile access -->
-            {% if current_user.is_authenticated %}
-            <div class="d-grid gap-3 d-sm-flex justify-content-sm-center mb-5">
-                <a href="{{ url_for('profile') }}" class="btn btn-primary btn-lg px-4">
-                    <i class="fas fa-user-circle me-2"></i>My Profile
-                </a>
-                {% if not current_user.is_volunteer %}
-                <a href="{{ url_for('volunteer_signup') }}" class="btn btn-outline-primary btn-lg px-4">
-                    <i class="fas fa-hands-helping me-2"></i>Become a Volunteer
-                </a>
-                {% endif %}
-            </div>
-            {% else %}
-            <div class="d-grid gap-3 d-sm-flex justify-content-sm-center mb-5">
-                <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg px-4">Login</a>
-                <a href="{{ url_for('register') }}" class="btn btn-outline-primary btn-lg px-4">Register</a>
-            </div>
-            {% endif %}
-        </div>
+    <div class="home-header">
+        <h1>Welcome to Disaster Relief Platform</h1>
+        <p class="subtitle">Connecting volunteers with those in need during disasters</p>
     </div>
 
-    <!-- Rest of your existing content -->
-    <div class="row">
-        <div class="col-12">
-            <h2 class="text-center mb-4">Recent Disasters</h2>
-        </div>
-        {% for disaster in disasters %}
-            <!-- Your existing disaster cards -->
-        {% endfor %}
+    <div class="recent-disasters">
+        <h2>Recent Disasters</h2>
+        {% if disasters %}
+            <div class="disasters-grid">
+                {% for disaster in disasters %}
+                    <div class="disaster-card">
+                        <div class="disaster-type">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            {{ disaster.disaster_type }}
+                        </div>
+                        <div class="disaster-info">
+                            <h3>{{ disaster.location }}</h3>
+                            <p>{{ disaster.description }}</p>
+                            <div class="disaster-meta">
+                                <span class="severity {{ disaster.severity.lower() }}">
+                                    {{ disaster.severity }}
+                                </span>
+                                <span class="date">
+                                    {{ disaster.created_at.strftime('%B %d, %Y') }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="no-disasters">No recent disasters reported.</p>
+        {% endif %}
+    </div>
+
+    <div class="action-buttons">
+        {% if current_user.is_authenticated %}
+            {% if current_user.is_volunteer %}
+                <a href="{{ url_for('view_requests') }}" class="btn btn-primary">
+                    <i class="fas fa-clipboard-list"></i> View Help Requests
+                </a>
+            {% else %}
+                <a href="{{ url_for('volunteer_signup') }}" class="btn btn-primary">
+                    <i class="fas fa-hand-holding-heart"></i> Become a Volunteer
+                </a>
+            {% endif %}
+        {% else %}
+            <a href="{{ url_for('register') }}" class="btn btn-primary">
+                <i class="fas fa-user-plus"></i> Register Now
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-secondary">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
