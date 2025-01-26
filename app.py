@@ -190,8 +190,7 @@ def add_disaster():
 
 # Helper functions
 def get_recent_activities(limit=5):
-    # Implement your activity logging logic here
-    return []
+    return Activity.query.order_by(Activity.created_at.desc()).limit(limit).all()
 
 # Create all database tables
 with app.app_context():
