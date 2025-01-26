@@ -18,7 +18,7 @@ def create_app():
     login_manager.init_app(app)
     csrf.init_app(app)
 
-    login_manager.login_view = 'login'
+    login_manager.login_view = 'main.login'
 
     with app.app_context():
         # Import models
@@ -27,7 +27,8 @@ def create_app():
         # Create tables
         db.create_all()
 
-        # Import routes
-        import routes
+        # Register blueprints
+        from routes import main as main_blueprint
+        app.register_blueprint(main_blueprint)
         
         return app 
