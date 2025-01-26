@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import requests
@@ -7,19 +6,18 @@ from datetime import datetime
 from functools import wraps
 from flask_wtf.csrf import CSRFProtect
 
+from extensions import db, login_manager
+from models import User, VolunteerApplication, Disaster, DisasterResource, Activity
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'  # Change this!
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///disaster_relief.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
-db = SQLAlchemy(app)
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
+db.init_app(app)
+login_manager.init_app(app)
 csrf = CSRFProtect(app)
-
-# Import models
-from models import User, VolunteerApplication, Disaster, DisasterResource
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -195,7 +193,7 @@ def get_recent_activities(limit=5):
     # Implement your activity logging logic here
     return []
 
-# Create tables
+# Create all database tables
 with app.app_context():
     db.create_all()
 
