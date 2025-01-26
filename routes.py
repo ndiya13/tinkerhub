@@ -1,8 +1,8 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from functools import wraps
-from . import db
-from .models import User, VolunteerApplication, Disaster, DisasterResource, Activity
+from __init__ import db
+from models import User, VolunteerApplication, Disaster, DisasterResource, Activity
 
 def admin_required(f):
     @wraps(f)
