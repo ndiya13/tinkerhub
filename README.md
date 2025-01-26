@@ -11,7 +11,7 @@
 - Member 3: GAYATHRI SREEKUMAR - SAINTGITS COLLEGE OF ENGINEERING
 
 ### Hosted Project Link
-[mention your project hosted project link here]
+It is not feasible to host unless you have paid for a domain
 
 ### Project Description
 *ResQHub* is a centralized platform designed to streamline disaster resource management and relief coordination. It connects responders, volunteers, and affected communities, enabling real-time tracking, allocation, and deployment of essential resources during emergencies. The goal is to ensure faster, more efficient disaster response and recovery.
@@ -27,73 +27,51 @@ We’re building *ResQHub*, a smart platform that acts like a disaster superhero
 For Software:
 - PYTHON,HTML,CSS
 - PYTHON FLASK
-- [Libraries used]
-- [Tools used]
+- FLASK,FLASK LOGIN,FLASK SQLALchemy
+- pytest-flask,flask-debug toolbar
 
-For Hardware:
-- [List main components]
-- [List specifications]
-- [List tools required]
+
 
 ### Implementation
 For Software:
 # Installation
-[commands]
+pip install Flask Flask-Login Flask-SQLALchemy
 
 # Run
-[commands]
+python app.py
 
 ### Project Documentation
 For Software:
 
 # Screenshots (Add at least 3)
-![Screenshot1](Add screenshot 1 here with proper name)
-*Add caption explaining what this shows*
+[home page](https://github.com/user-attachments/assets/aa71e252-6ce5-4b1b-8b4f-3673a947bbb6)
 
-![Screenshot2](Add screenshot 2 here with proper name)
-*Add caption explaining what this shows*
+Homepage of a Disaster Relief Platform showcasing volunteer and relief operation statistics
 
-![Screenshot3](Add screenshot 3 here with proper name)
-*Add caption explaining what this shows*
+[login page](https://github.com/user-attachments/assets/d2d95bd0-d75b-4beb-80d6-3e7eddc37f29)
 
-# Diagrams
-![Workflow](Add your workflow/architecture diagram here)
-*Add caption explaining your workflow*
+This image shows the login page of a "Disaster Relief" platform, featuring options to sign in, secure platform information, and links to register or recover the password
 
-For Hardware:
+[Registration page](https://github.com/user-attachments/assets/c5be5349-1942-4f90-b743-19ffff32ba6c)
+ 
+This image shows the account registration page for the "Disaster Relief" platform, where users can create an account by entering a username, email, password, and agreeing to the terms and conditions.
 
-# Schematic & Circuit
-![Circuit](Add your circuit diagram here)
-*Add caption explaining connections*
+[volunteer info](https://github.com/user-attachments/assets/f6bfcdea-d335-4e83-8fee-f90a38115771)
 
-![Schematic](Add your schematic diagram here)
-*Add caption explaining the schematic*
+This image shows the volunteer information form for the "Disaster Relief" platform, where users can provide their skills, experience, location, and availability to apply as a volunteer.
 
-# Build Photos
-![Team](Add photo of your team here)
-
-
-![Components](Add photo of your components here)
-*List out all components shown*
-
-![Build](Add photos of build process here)
-*Explain the build steps*
-
-![Final](Add photo of final product here)
-*Explain the final build*
 
 ### Project Demo
 # Video
-[Add your demo video link here]
-*Explain what the video demonstrates*
+(https://drive.google.com/file/d/1192PwzmCxIH81lXsbek0tyKYrlsjTWtH/view?usp=drive_link)
+It displays the various html pages like home page, register page, login page and volunteer information page. It also shows that the buttons on the home page as well as the other pages mentioned above are routed properly.
 
-# Additional Demos
-[Add any extra demo materials/links]
+
 
 ## Team Contributions
-- [Name 1]: [Specific contributions]
-- [Name 2]: [Specific contributions]
-- [Name 3]: [Specific contributions]
+- DEVASENA S K : Developed frontend for volunteer information page
+- DIYA NAIR: Developed backend using python flask
+- GAYATHRI SREEKUMAR: Developed frontend for login page and contributed towards developing frontend for registration page
 
 ---
 Made with ❤️ at TinkerHub
