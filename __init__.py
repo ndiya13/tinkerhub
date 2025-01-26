@@ -22,12 +22,12 @@ def create_app():
 
     with app.app_context():
         # Import models
-        from . import models
+        import models
         
         # Create tables
         db.create_all()
 
         # Import routes
-        from . import routes
+        import routes
         
         return app 
