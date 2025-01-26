@@ -1,8 +1,10 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user
 import requests
 from datetime import datetime
+from functools import wraps
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'  # Change this to a secure secret key
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///disaster_relief.db'
@@ -11,6 +13,7 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -38,6 +41,14 @@ class Disaster(db.Model):
     severity = db.Column(db.String(50))
     description = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/')
 def home():
@@ -92,121 +103,50 @@ def login():
         return jsonify({"error": "Invalid credentials"}), 401
     return render_template('login.html')
 
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return jsonify({"message": "Logged out successfully"})
-
-@app.route('/request_resource', methods=['POST'])
-@login_required
-def request_resource():
-    data = request.form
-    new_request = ResourceRequest(
-        user_id=current_user.id,
-        resource_type=data['resource_type'],
-        description=data['description'],
-        location=data['location']
-    )
-    db.session.add(new_request)
-    db.session.commit()
-    return jsonify({"message": "Resource request created successfully"})
-
-@app.route('/view_requests')
-@login_required
-def view_requests():
-    if current_user.is_volunteer:
-        requests = ResourceRequest.query.order_by(ResourceRequest.created_at.desc()).all()
-    else:
-        requests = ResourceRequest.query.filter_by(user_id=current_user.id).all()
-    return render_template('requests.html', requests=requests)
-
-@app.route('/update_request_status/<int:request_id>', methods=['POST'])
-@login_required
-def update_request_status(request_id):
-    if not current_user.is_volunteer:
-        return jsonify({"error": "Unauthorized"}), 403
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    total_users = User.query.count()
+    total_volunteers = User.query.filter_by(is_volunteer=True).count()
+    pending_applications = VolunteerApplication.query.filter_by(status='pending').count()
+    active_disasters = Disaster.query.filter_by(status='active').count()
     
-    request = ResourceRequest.query.get_or_404(request_id)
-    request.status = request.form['status']
-    db.session.commit()
-    return jsonify({"message": "Status updated successfully"})
-
-@app.route('/profile')
-@login_required
-def profile():
-    user_requests = ResourceRequest.query.filter_by(user_id=current_user.id).order_by(ResourceRequest.created_at.desc()).all()
-    return render_template('profile.html', user=current_user, requests=user_requests)
-
-@app.route('/update_profile', methods=['POST'])
-@login_required
-def update_profile():
-    data = request.form
-    user = current_user
-    user.skills = data.get('skills', user.skills)
-    user.experience = data.get('experience', user.experience)
-    user.location = data.get('location', user.location)
-    db.session.commit()
-    return jsonify({"message": "Profile updated successfully"})
-
-@app.route('/volunteer_signup', methods=['GET', 'POST'])
-def volunteer_signup():
-    if request.method == 'POST':
-        if not current_user.is_authenticated:
-            return jsonify({"error": "Please login first"}), 401
-        
-        data = request.form
-        current_user.is_volunteer = True
-        current_user.skills = data.get('skills', '')
-        current_user.experience = data.get('experience', '')
-        current_user.location = data.get('location', '')
-        
-        try:
-            db.session.commit()
-            return jsonify({"message": "Volunteer registration successful"})
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({"error": str(e)}), 500
-            
-    return render_template('volunteer_signup.html')
-
-@app.route('/update_volunteer_profile', methods=['POST'])
-@login_required
-def update_volunteer_profile():
-    if not current_user.is_volunteer:
-        return jsonify({"error": "Unauthorized"}), 403
-        
-    data = request.form
-    current_user.skills = data.get('skills', current_user.skills)
-    current_user.experience = data.get('experience', current_user.experience)
-    current_user.location = data.get('location', current_user.location)
+    recent_activities = [
+        {
+            'icon': 'fas fa-user-plus',
+            'description': 'New user registered',
+            'timestamp': '2 minutes ago'
+        },
+        # Add more activities
+    ]
     
-    try:
-        db.session.commit()
-        return jsonify({"message": "Volunteer profile updated successfully"})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+    users = User.query.all()
+    volunteer_applications = VolunteerApplication.query.filter_by(status='pending').all()
+    disasters = Disaster.query.all()
+    
+    return render_template('admin_dashboard.html',
+                         total_users=total_users,
+                         total_volunteers=total_volunteers,
+                         pending_applications=pending_applications,
+                         active_disasters=active_disasters,
+                         recent_activities=recent_activities,
+                         users=users,
+                         volunteer_applications=volunteer_applications,
+                         disasters=disasters)
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-def process_gdacs_data(data):
-    for alert in data['alerts']:
-        existing_disaster = Disaster.query.filter_by(gdacs_id=alert['id']).first()
-        if not existing_disaster:
-            new_disaster = Disaster(
-                gdacs_id=alert['id'],
-                disaster_type=alert['type'],
-                location=f"{alert['latitude']}, {alert['longitude']}",
-                severity=alert['severity'],
-                description=alert['description']
-            )
-            db.session.add(new_disaster)
+@app.route('/admin/approve-volunteer/<int:id>', methods=['POST'])
+@admin_required
+def approve_volunteer(id):
+    application = VolunteerApplication.query.get_or_404(id)
+    application.status = 'approved'
+    application.user.is_volunteer = True
     db.session.commit()
+    return jsonify({'success': True})
 
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
+@app.route('/admin/reject-volunteer/<int:id>', methods=['POST'])
+@admin_required
+def reject_volunteer(id):
+    application = VolunteerApplication.query.get_or_404(id)
+    application.status = 'rejected'
+    db.session.commit()
+    return jsonify({'success': True})
